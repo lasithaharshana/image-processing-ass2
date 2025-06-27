@@ -70,16 +70,27 @@ def process_single_image(image):
     seeds = [(h//4, w//2), (h//2, w//4), (h//2, 3*w//4), (3*h//4, w//2)]
     
     segmented = img_region_grow(image, seeds)
-    save_essential_outputs(image, segmented)
+    save_essential_outputs(image, segmented, seeds)
     return segmented
 
-def save_essential_outputs(image, segmented):
-    # Save original grayscale image
+def save_essential_outputs(image, segmented, seeds):
+    # Save original grayscale image (without seed points)
     plt.figure(figsize=(8, 6))
     plt.imshow(image, cmap='gray')
     plt.title('Original Grayscale Image')
     plt.axis('off')
     plt.savefig('outputs/q2_original.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # Save seed points visualization
+    plt.figure(figsize=(8, 6))
+    plt.imshow(image, cmap='gray')
+    plt.scatter([s[1] for s in seeds], [s[0] for s in seeds], c='red', s=60, marker='x', linewidths=3)
+    for i, seed in enumerate(seeds):
+        plt.text(seed[1]+5, seed[0]+5, f'S{i+1}', color='red', fontweight='bold', fontsize=10)
+    plt.title('Seed Points for Cross Pattern Region Growing')
+    plt.axis('off')
+    plt.savefig('outputs/q2_seeds.png', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Save cross pattern segmentation result
