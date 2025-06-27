@@ -77,40 +77,6 @@ class RegionGrowing:
             
         return region_stats
 
-def create_test_image():
-    # Create a synthetic image with different regions
-    image = np.zeros((200, 200), dtype=np.uint8)
-    
-    # Background
-    image[:, :] = 50
-    
-    # Add some regions with different intensities
-    # Region 1: Rectangle
-    image[30:80, 30:80] = 120
-    
-    # Region 2: Circle
-    center_x, center_y = 140, 60
-    radius = 25
-    y, x = np.ogrid[:200, :200]
-    mask1 = (x - center_x)**2 + (y - center_y)**2 <= radius**2
-    image[mask1] = 180
-    
-    # Region 3: Another rectangle
-    image[120:170, 50:120] = 90
-    
-    # Region 4: Small circle
-    center_x2, center_y2 = 150, 150
-    radius2 = 20
-    mask2 = (x - center_x2)**2 + (y - center_y2)**2 <= radius2**2
-    image[mask2] = 200
-    
-    # Add some noise
-    noise = np.random.normal(0, 5, image.shape)
-    noisy_image = image.astype(np.float32) + noise
-    noisy_image = np.clip(noisy_image, 0, 255).astype(np.uint8)
-    
-    return noisy_image
-
 def load_input_image(image_path):
     if os.path.exists(image_path):
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -118,56 +84,18 @@ def load_input_image(image_path):
             return image
     return None
 
-def interactive_seed_selection(image, title="Select Seeds"):
-    seeds = []
-    
-    def onclick(event):
-        if event.xdata is not None and event.ydata is not None:
-            x = int(event.ydata)
-            y = int(event.xdata)
-            seeds.append((x, y))
-            plt.plot(event.xdata, event.ydata, 'ro', markersize=8)
-            plt.draw()
-            print(f"Seed selected at ({x}, {y}), value: {image[x, y]}")
-    
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.imshow(image, cmap='gray')
-    ax.set_title(f'{title}\nClick to select seed points, then close the window')
-    fig.canvas.mpl_connect('button_press_event', onclick)
-    plt.show()
-    
-    return seeds
-
 def process_single_image(image, image_title, image_path, seeds, thresholds):
-    # Test different threshold values
     results = {}
     
     for threshold in thresholds:
-        print(f"\nTesting with threshold: {threshold}")
-        
-        # Create region growing instance
         rg = RegionGrowing(image, threshold=threshold)
-        
-        # Perform region growing
         region_stats = rg.multi_seed_region_grow(seeds)
         
         results[threshold] = {
             'segmented': rg.segmented.copy(),
             'stats': region_stats
         }
-        
-        # Print statistics
-        total_pixels = 0
-        for region_name, stats in region_stats.items():
-            pixels = stats['pixels']
-            seed_val = stats['seed_value']
-            print(f"  {region_name}: {pixels} pixels, seed value: {seed_val}")
-            total_pixels += pixels
-        
-        coverage = (total_pixels / (image.shape[0] * image.shape[1])) * 100
-        print(f"  Total coverage: {coverage:.1f}%")
     
-    # Create visualizations for this image
     create_region_growing_visualizations(image, image_title, image_path, results, seeds, thresholds)
     
     return results
@@ -213,78 +141,39 @@ def create_region_growing_visualizations(image, image_title, image_path, results
     
     plt.tight_layout()
     
-    # Save to outputs folder
     output_filename = 'outputs/q2_region_growing_results.png'
     plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    print(f"✅ Results saved to {output_filename}")
     plt.close()
 
 def demonstrate_region_growing():
-    print("Question 2: Region Growing Implementation")
-    print("="*50)
-    
-    # Load only input_image_q2.jpg for Question 2
     input_image_path = "inputs/input_image_q2.jpg"
     
-    print(f"Loading {input_image_path} for region growing...")
     image = load_input_image(input_image_path)
     
     if image is not None:
-        print(f"✅ Successfully loaded {input_image_path}")
         image_title = "Input Image Q2"
-        
-        # Resize if too large
         if image.shape[0] > 400 or image.shape[1] > 400:
             scale = min(400/image.shape[0], 400/image.shape[1])
             new_width = int(image.shape[1] * scale)
             new_height = int(image.shape[0] * scale)
             image = cv2.resize(image, (new_width, new_height))
-            print(f"Resized to: {image.shape}")
     else:
-        print(f"❌ Failed to load {input_image_path}")
-        print("Creating synthetic test image as fallback...")
-        image = create_test_image()
-        image_title = "Synthetic Test Image"
-        input_image_path = "synthetic"
+        return
     
-    print(f"Image shape: {image.shape}")
-    print(f"Image value range: [{np.min(image)}, {np.max(image)}]")
-    
-    # Define different threshold values to test
     thresholds = [5, 15, 30]
     
-    # Pre-defined seed points for demonstration
     h, w = image.shape
-    if image.shape == (200, 200):  # Synthetic image
-        seeds = [(55, 55), (60, 140), (145, 85), (150, 150)]
-    else:  # Real image - use strategic points
-        seeds = [
-            (h//4, w//4),      # Top-left quadrant
-            (h//2, w//2),      # Center
-            (3*h//4, w//4),    # Bottom-left quadrant
-            (h//4, 3*w//4)     # Top-right quadrant
-        ]
+    seeds = [
+        (h//4, w//4),
+        (h//2, w//2),
+        (3*h//4, w//4),
+        (h//4, 3*w//4)
+    ]
     
-    print(f"Using {len(seeds)} seed points: {seeds}")
-    
-    # Process this image with different thresholds
     process_single_image(image, image_title, input_image_path, seeds, thresholds)
     
 def main():
     demonstrate_region_growing()
-    
-    print("\nRegion Growing Analysis Complete!")
-    print("Generated files in outputs/ folder:")
-    print("- outputs/q2_region_growing_results.png")
-    
-    # Print final summary
-    print("\nSummary:")
-    print("Region growing successfully implemented with the following features:")
-    print("- Uses input_image_q2.jpg")
-    print("- 8-connected neighborhood consideration")
-    print("- Multiple seed point support")
-    print("- Configurable threshold parameter")
-    print("- Comprehensive visualization")
 
 if __name__ == "__main__":
     main()
