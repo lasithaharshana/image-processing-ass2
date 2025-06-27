@@ -1,9 +1,11 @@
 import numpy as np
 import cv2
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
+
 
 def img_region_grow(img, seeds):
     rows, cols = img.shape
@@ -54,8 +56,9 @@ def img_region_grow(img, seeds):
                     else:
                         tempmat[xn, yn] = -1
 
-    bwimg = (tempmat == 1)
+    bwimg = tempmat == 1
     return bwimg
+
 
 def load_input_image(image_path):
     if os.path.exists(image_path):
@@ -64,60 +67,84 @@ def load_input_image(image_path):
             return image
     return None
 
+
 def process_single_image(image):
     h, w = image.shape
     # Cross pattern seeds
-    seeds = [(h//4, w//2), (h//2, w//4), (h//2, 3*w//4), (3*h//4, w//2)]
-    
+    seeds = [
+        (h // 4, w // 2),
+        (h // 2, w // 4),
+        (h // 2, 3 * w // 4),
+        (3 * h // 4, w // 2),
+    ]
+
     segmented = img_region_grow(image, seeds)
     save_essential_outputs(image, segmented, seeds)
     return segmented
 
+
 def save_essential_outputs(image, segmented, seeds):
     # Save original grayscale image (without seed points)
     plt.figure(figsize=(8, 6))
-    plt.imshow(image, cmap='gray')
-    plt.title('Original Grayscale Image')
-    plt.axis('off')
-    plt.savefig('outputs/q2_original.png', dpi=300, bbox_inches='tight')
+    plt.imshow(image, cmap="gray")
+    plt.title("Original Grayscale Image")
+    plt.axis("off")
+    plt.savefig("outputs/q2_original.png", dpi=300, bbox_inches="tight")
     plt.close()
-    
+
     # Save seed points visualization
     plt.figure(figsize=(8, 6))
-    plt.imshow(image, cmap='gray')
-    plt.scatter([s[1] for s in seeds], [s[0] for s in seeds], c='red', s=60, marker='x', linewidths=3)
+    plt.imshow(image, cmap="gray")
+    plt.scatter(
+        [s[1] for s in seeds],
+        [s[0] for s in seeds],
+        c="red",
+        s=60,
+        marker="x",
+        linewidths=3,
+    )
     for i, seed in enumerate(seeds):
-        plt.text(seed[1]+5, seed[0]+5, f'S{i+1}', color='red', fontweight='bold', fontsize=10)
-    plt.title('Seed Points for Cross Pattern Region Growing')
-    plt.axis('off')
-    plt.savefig('outputs/q2_seeds.png', dpi=300, bbox_inches='tight')
+        plt.text(
+            seed[1] + 5,
+            seed[0] + 5,
+            f"S{i+1}",
+            color="red",
+            fontweight="bold",
+            fontsize=10,
+        )
+    plt.title("Seed Points for Cross Pattern Region Growing")
+    plt.axis("off")
+    plt.savefig("outputs/q2_seeds.png", dpi=300, bbox_inches="tight")
     plt.close()
-    
+
     # Save cross pattern segmentation result
     plt.figure(figsize=(8, 6))
-    plt.imshow(segmented, cmap='gray')
-    plt.title('Cross Pattern Region Growing Segmentation')
-    plt.axis('off')
-    plt.savefig('outputs/q2_segmented.png', dpi=300, bbox_inches='tight')
+    plt.imshow(segmented, cmap="gray")
+    plt.title("Cross Pattern Region Growing Segmentation")
+    plt.axis("off")
+    plt.savefig("outputs/q2_segmented.png", dpi=300, bbox_inches="tight")
     plt.close()
+
 
 def demonstrate_region_growing():
     input_image_path = "inputs/input_image_q2.jpg"
     image = load_input_image(input_image_path)
-    
+
     if image is not None:
         if image.shape[0] > 400 or image.shape[1] > 400:
-            scale = min(400/image.shape[0], 400/image.shape[1])
+            scale = min(400 / image.shape[0], 400 / image.shape[1])
             new_width = int(image.shape[1] * scale)
             new_height = int(image.shape[0] * scale)
             image = cv2.resize(image, (new_width, new_height))
     else:
         return
-    
+
     process_single_image(image)
-    
+
+
 def main():
     demonstrate_region_growing()
+
 
 if __name__ == "__main__":
     main()
