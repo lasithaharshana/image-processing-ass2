@@ -127,6 +127,17 @@ def save_individual_images(
     plt.savefig("outputs/q1_result.png", dpi=300, bbox_inches="tight")
     plt.close()
 
+    plt.figure(figsize=(8, 6))
+    plt.bar(range(256), hist, color='blue', alpha=0.7, width=1)
+    plt.axvline(x=optimal_threshold, color='red', linestyle='--', linewidth=2, label=f'Otsu Threshold = {optimal_threshold}')
+    plt.title("Image Histogram with Otsu Threshold")
+    plt.xlabel("Pixel Intensity")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.savefig("outputs/q1_histogram.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
 
 if __name__ == "__main__":
     main()
